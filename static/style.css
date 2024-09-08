@@ -147,7 +147,7 @@ select#domain {
 
 .resource-button, .owner-button {
   padding: 8px;
-  color: #8062fb;
+  color: #04f8f8;
   font-weight: 400;
   margin-bottom: 8px;
   border-radius: 7px;
@@ -156,7 +156,7 @@ select#domain {
 }
 
 .resource-button:hover, .owner-button:hover {
-  color: #8062fb;
+  color: #03508f;
   background: rgba(42, 0, 255, 0.1);
 }
 
