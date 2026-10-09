@@ -87,9 +87,10 @@ func makeInvoice(
 	// actually generate the invoice
 	bolt11, err = makeinvoice.MakeInvoice(mip)
 
+	// Sem o backend no log: ele traz a macaroon/chave do dono e o endereço do node (09/10/2026).
 	log.Debug().Int("msatoshi", msat).
-		Interface("backend", backend).
-		Str("bolt11", bolt11).Err(err).
+		Str("kind", params.Kind).
+		Bool("ok", err == nil).Err(err).
 		Msg("invoice generation")
 
 	return bolt11, err
