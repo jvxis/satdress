@@ -82,9 +82,10 @@ func makeInvoice(
 	// actually generate the invoice
 	bolt11, err = makeinvoice.MakeInvoice(mip)
 
+	// No backend in the log: it carries the owner's macaroon/key and the node address.
 	log.Debug().Int("msatoshi", msat).
-		Interface("backend", backend).
-		Str("bolt11", bolt11).Err(err).
+		Str("kind", params.Kind).
+		Bool("ok", err == nil).Err(err).
 		Msg("invoice generation")
 
 	return bolt11, err
