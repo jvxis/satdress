@@ -1,76 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
-    <title>Lightning Address Saved | Satdress</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/png" href="https://i.imgur.com/4yaPtA2.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="/static/style.css" />
+    <title>Lightning address pronta · BR⚡LN</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/static/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
+    <link rel="stylesheet" href="/static/style.css?v=2" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   </head>
   <body>
-    <main id="main">
-      <div class="title">Success!</div>
-      <div class="card">
-        <div class="description">
-          <b>{{ name }}@{{ actual_domain }}</b> is your new Lightning Address!
+    <div id="main" v-cloak>
+      <header class="header">
+        <div class="container header-row">
+          <a class="brand" href="https://br-ln.com/" aria-label="BR⚡LN Club"><img src="/static/brln-logo.png" alt="BR⚡LN" width="104" height="44" /></a>
+          <nav class="nav" aria-label="Menu">
+            <a href="/">{{ t('back') }}</a>
+          </nav>
         </div>
-        <div class="bold-small">
-          In order to edit the configuration of this address in the future you
-          must save this secret pin:
+      </header>
+
+      <main class="container success">
+        <div>
+          <p class="eyebrow">{{ t('eyebrow') }}</p>
+          <p class="big-address">{{ name }}@{{ actual_domain }}</p>
         </div>
-        <div class="code">{{ pin }}</div>
-        <button class="copy-button" @click="copyToClipboard">
-          {{ copied ? 'Copied!' : 'Copy Secret PIN' }}
-        </button>
-        <div class="bold-small">
-          To ensure the connection with your Lightning backend is configured
-          properly, we've created a test invoice that can be seen below.
+
+        <section class="card">
+          <h2>{{ t('pin_title') }}</h2>
+          <p class="lede" style="font-size:1rem">{{ t('pin_text') }}</p>
+          <div class="code">{{ pin }}</div>
+          <div class="submit-row">
+            <button type="button" class="btn btn-cta" @click="copyToClipboard">{{ copied ? t('copied') : t('copy') }}</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>{{ t('test_title') }}</h2>
+          <p class="lede" style="font-size:1rem">{{ t('test_text') }}</p>
+          <div class="qr"><canvas id="qr"></canvas></div>
+          <div class="code">{{ invoice }}</div>
+        </section>
+
+        <section class="info zap" v-if="zaps">
+          <h3>⚡ {{ t('zap_title') }}</h3>
+          <p>{{ t('zap_text') }}</p>
+        </section>
+
+        <div class="submit-row">
+          <a class="btn btn-ghost" href="https://br-ln.com/ferramentas/">{{ t('tools') }}</a>
+          <a class="btn btn-ghost" href="https://services.br-ln.com/?utm_source=brln_owned&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_success">{{ t('club') }}</a>
         </div>
-        <canvas id="qr"></canvas>
-        <div class="code">{{ invoice }}</div>
-      </div>
-      <div class="resources">
-        <a class="resource-button" target="_blank" href="https://t.me/lnurl">
-          Not working? Ask for help!
-        </a>
-        <a
-          class="resource-button"
-          href="https://github.com/andrerfneves/lightning-address#readme"
-          target="_blank"
-        >
-          More information on Lightning Address
-        </a>
-      </div>
-    </main>
+      </main>
+
+      <footer class="footer">
+        <div class="container footer-row">
+          <span>{{ t('footer') }}</span>
+          <div class="footer-links">
+            <a href="https://br-ln.com/">br-ln.com</a>
+            <a href="https://github.com/andrerfneves/lightning-address#readme" target="_blank" rel="noopener">Lightning Address</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.2/vue.global.prod.min.js"></script>
     <script>
       const initial = {} // REPLACED WITH SERVER DATA
 
+      const TEXT = {
+        pt: {
+          back: 'Voltar', eyebrow: 'Sua Lightning address está pronta',
+          pin_title: 'Guarde o seu PIN secreto',
+          pin_text: 'É com ele que você muda este endereço depois. Ele não aparece de novo: copie e guarde num lugar seguro.',
+          copy: 'Copiar o PIN', copied: 'Copiado!',
+          test_title: 'Fatura de teste',
+          test_text: 'Para conferir a conexão com o seu node, criamos esta fatura de 1 sat nele. Se ela apareceu, está tudo certo.',
+          zap_title: 'Agora os zaps',
+          zap_text: 'Coloque este endereço no seu perfil Nostr (campo lud16, "Lightning address") para receber zaps nas suas notas.',
+          tools: 'Mais ferramentas grátis', club: 'Conhecer o BR⚡LN Club', footer: 'Lightning address grátis do BR⚡LN Club.'
+        },
+        en: {
+          back: 'Back', eyebrow: 'Your Lightning address is ready',
+          pin_title: 'Keep your secret PIN',
+          pin_text: 'You need it to change this address later. It is not shown again: copy it and keep it somewhere safe.',
+          copy: 'Copy the PIN', copied: 'Copied!',
+          test_title: 'Test invoice',
+          test_text: 'To check the connection to your node, we created this 1 sat invoice on it. If it showed up, everything works.',
+          zap_title: 'Now the zaps',
+          zap_text: 'Put this address in your Nostr profile (lud16, "Lightning address") to get zaps on your notes.',
+          tools: 'More free tools', club: 'Meet BR⚡LN Club', footer: 'Free Lightning address from BR⚡LN Club.'
+        }
+      }
+
       const Main = {
         data() {
-          return {
-            ...initial,
-            copied: false
-          }
+          const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'pt'
+          return { zaps: false, ...initial, lang, copied: false }
         },
-
         methods: {
+          t(key) { return (TEXT[this.lang] || TEXT.pt)[key] || TEXT.pt[key] || key },
           copyToClipboard() {
             navigator.clipboard.writeText(this.pin)
             this.copied = true
-            setTimeout(() => {
-              this.copied = false
-            }, 5000)
+            setTimeout(() => { this.copied = false }, 5000)
           }
         },
-
         mounted() {
-          new QRious({
-            element: document.getElementById('qr'),
-            value: this.invoice,
-            size: 300
-          })
+          document.documentElement.lang = this.lang === 'en' ? 'en' : 'pt-BR'
+          new QRious({ element: document.getElementById('qr'), value: this.invoice, size: 280 })
         }
       }
 

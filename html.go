@@ -13,6 +13,7 @@ type BaseData struct {
 	SiteOwnerURL  string   `json:"siteOwnerURL"`
 	SiteName      string   `json:"siteName"`
 	UsernameInfo  string   `json:"usernameInfo"`
+	Zaps          bool     `json:"zaps"`
 }
 
 func renderHTML(w http.ResponseWriter, html string, extraData interface{}) {
@@ -26,6 +27,7 @@ func renderHTML(w http.ResponseWriter, html string, extraData interface{}) {
 		SiteOwnerURL:  s.SiteOwnerURL,
 		SiteName:      s.SiteName,
 		UsernameInfo:  info,
+		Zaps:          nostrKey != nil,
 	})
 	extra, _ := json.Marshal(extraData)
 

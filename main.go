@@ -31,6 +31,11 @@ type Settings struct {
 
 	ForceMigrate bool   `envconfig:"FORCE_MIGRATE" required:"false" default:false`
 	TorProxyURL  string `envconfig:"TOR_PROXY_URL"`
+
+	// Zaps do Nostr (NIP-57): sem a chave, desligados. ZAP_RELAYS (separados por vírgula) recebem
+	// o recibo além dos relays que o pedido de zap indicar.
+	NostrPrivateKey string `envconfig:"NOSTR_PRIVATE_KEY"`
+	ZapRelays       string `envconfig:"ZAP_RELAYS"`
 }
 
 var (
@@ -63,6 +68,8 @@ func main() {
 	if s.TorProxyURL != "" {
 		makeinvoice.TorProxyURL = s.TorProxyURL
 	}
+
+	setupZaps()
 
 	dbName := fmt.Sprintf("%v-multiple.db", s.SiteName)
 	if _, err := os.Stat(dbName); os.IsNotExist(err) || s.ForceMigrate {

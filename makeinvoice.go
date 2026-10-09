@@ -25,6 +25,7 @@ func makeInvoice(
 	params *Params,
 	msat int,
 	pin *string,
+	zapRequest string,
 ) (bolt11 string, err error) {
 	// prepare params
 	var backend makeinvoice.BackendParams
@@ -70,7 +71,11 @@ func makeInvoice(
 		Label: params.Domain + "/" + strconv.FormatInt(time.Now().Unix(), 16),
 	}
 
-	if pin != nil {
+	if zapRequest != "" {
+		// zap (NIP-57): o description_hash é o do pedido de zap, como veio
+		mip.Description = zapRequest
+		mip.UseDescriptionHash = true
+	} else if pin != nil {
 		// use this as the description
 		mip.Description = fmt.Sprintf("%s's PIN for '%s@%s' lightning address: %s", params.Domain, params.Name, params.Domain, *pin)
 	} else {

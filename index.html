@@ -1,203 +1,270 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
-    <title>BR⚡LN - Federated Lightning Address Server</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/png" href="https://i.imgur.com/4yaPtA2.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="//fonts.googleapis.com/css?family=PT+Sans"
-    />
-    <link rel="stylesheet" href="/static/style.css" />
+    <title>Lightning address grátis para o seu node · BR⚡LN</title>
+    <meta name="description" content="Tenha um endereço voce@pay.br-ln.com que recebe direto no seu node Lightning, com zaps do Nostr. Grátis, sem cadastro e sem custódia." />
+    <link rel="icon" href="/static/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
+    <link rel="stylesheet" href="/static/style.css?v=2" />
   </head>
   <body>
-    <main id="main">
-      <div class="title">{{ siteName }}</div>
-      <div class="tagline">Federated Lightning Address Server</div>
-      <div class="owner">
-        <a class="owner-button" :href="siteOwnerURL" target="_blank">
-          Brought to you by <span class="owner-name">{{ siteOwnerName }}</span>
-        </a>
-      </div>
-      <div class="card">
-        <div class="description">
-          Use the form below to connect your own node to a
-          <b>Lightning Address</b>.
+    <div id="main" v-cloak>
+      <header class="header">
+        <div class="container header-row">
+          <a class="brand" href="https://br-ln.com/" aria-label="BR⚡LN Club"><img src="/static/brln-logo.png" alt="BR⚡LN" width="104" height="44" /></a>
+          <nav class="nav" aria-label="Menu">
+            <a href="https://br-ln.com/ferramentas/" class="hide-sm">{{ t('nav_tools') }}</a>
+            <a href="https://br-ln.com/faucet/" class="hide-sm">Faucet</a>
+            <a href="https://services.br-ln.com/?utm_source=brln_owned&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_header">{{ t('nav_club') }}</a>
+          </nav>
+          <button type="button" class="lang" @click="toggleLang">{{ lang === 'en' ? 'PT' : 'EN' }}</button>
         </div>
-        <form action="/grab" method="post">
-          <div class="field">
-            <div class="row">
-              <label for="name"> {{usernameInfo}} </label>
-            </div>
-            <div class="domain-wrapper">
-              <input class="input" name="name" id="name" />
-              <span v-if="domains.length == 1">@{{ domains[0] }}</span>
-              <span v-if="domains.length > 1">@</span>
-              <select
-                name="domain"
-                id="domain"
-                v-if="domains.length > 1"
-              >
-                <option v-for="domain in domains" :value="domain">
-                  {{ domain }}
-                </option>
-              </select>
-            </div>
+      </header>
+
+      <main class="container">
+        <section class="hero">
+          <p class="eyebrow">{{ t('eyebrow') }}</p>
+          <h1 class="headline" v-html="t('title')"></h1>
+          <p class="lede">{{ t('lede') }}</p>
+          <div class="badges">
+            <span class="badge">{{ t('badge_free') }}</span>
+            <span class="badge">{{ t('badge_custody') }}</span>
+            <span class="badge">{{ t('badge_tor') }}</span>
+            <span class="badge zap" v-if="zaps">⚡ {{ t('badge_zaps') }}</span>
           </div>
-          <div class="field">
-            <label for="kind"> Node Backend Type </label>
-            <select name="kind" id="kind" id="kind" v-model="kind">
-              <option disabled value="">Please select one:</option>
-              <option value="lnd">LND</option>
-              <option value="commando">Commando (CLN)</option>
-              <option value="eclair">Eclair</option>
-              <option value="lnpay">LNPay</option>
-              <option value="lnbits">LNbits</option>
-              <option value="sparko">Sparko (CLN)</option>
-            </select>
+        </section>
+
+        <div class="layout">
+          <section class="card" aria-labelledby="form-title">
+            <h2 id="form-title">{{ isNew ? t('form_new') : t('form_edit') }}</h2>
+            <form :action="lang === 'en' ? '/grab?lang=en' : '/grab'" method="post" class="form">
+              <div class="field">
+                <label for="name">{{ t('name') }}</label>
+                <div class="address">
+                  <input class="input mono" name="name" id="name" required autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="t('name_ph')" />
+                  <span class="at" v-if="domains.length == 1">@{{ domains[0] }}</span>
+                  <span class="at" v-if="domains.length > 1">@</span>
+                  <select name="domain" id="domain" v-if="domains.length > 1">
+                    <option v-for="domain in domains" :value="domain">{{ domain }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="kind">{{ t('kind') }}</label>
+                <select name="kind" id="kind" v-model="kind" required>
+                  <option disabled value="">{{ t('kind_pick') }}</option>
+                  <option value="lnd">LND</option>
+                  <option value="lnbits">LNbits</option>
+                  <option value="commando">Commando (CLN)</option>
+                  <option value="sparko">Sparko (CLN)</option>
+                  <option value="eclair">Eclair</option>
+                  <option value="lnpay">LNPay</option>
+                </select>
+                <span class="hint" v-if="zaps && kind && kind !== 'lnd' && kind !== 'lnbits'">{{ t('no_zaps_kind') }}</span>
+              </div>
+
+              <template v-if="kind == 'lnd'">
+                <div class="field">
+                  <label for="host">{{ t('lnd_host') }}</label>
+                  <input class="input mono" name="host" id="host" placeholder="https://seunode....onion:8080" autocomplete="off" spellcheck="false" />
+                  <span class="hint">{{ t('lnd_host_hint') }}</span>
+                </div>
+                <div class="field">
+                  <label for="macaroon">{{ t('lnd_macaroon') }}</label>
+                  <input class="input mono" name="key" id="macaroon" placeholder="AgEDbG5k..." autocomplete="off" spellcheck="false" />
+                  <span class="hint">{{ t('lnd_macaroon_hint') }}</span>
+                </div>
+              </template>
+
+              <template v-if="kind == 'sparko' || kind == 'lnbits'">
+                <div class="field">
+                  <label for="host">{{ t('host') }}</label>
+                  <input class="input mono" name="host" id="host" :placeholder="kind == 'lnbits' ? 'https://wallet.seudominio.com' : 'http://10.147.17.32:9737'" autocomplete="off" spellcheck="false" />
+                </div>
+                <div class="field">
+                  <label for="key">{{ kind == 'lnbits' ? t('lnbits_key') : t('key') }}</label>
+                  <input class="input mono" name="key" id="key" autocomplete="off" spellcheck="false" />
+                </div>
+              </template>
+
+              <template v-if="kind == 'eclair'">
+                <div class="field">
+                  <label for="host">{{ t('host') }}</label>
+                  <input class="input mono" name="host" id="host" placeholder="http://myeclair.com" autocomplete="off" />
+                </div>
+                <p class="warn" v-html="t('eclair_warn')"></p>
+              </template>
+
+              <template v-if="kind == 'lnpay'">
+                <div class="field">
+                  <label for="pak">Public Access Key (pak)</label>
+                  <input class="input mono" name="pak" id="pak" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="waki">Wallet Invoice Key (waki)</label>
+                  <input class="input mono" name="waki" id="waki" autocomplete="off" />
+                </div>
+              </template>
+
+              <template v-if="kind == 'commando'">
+                <div class="field">
+                  <label for="nodeid">{{ t('nodeid') }}</label>
+                  <input class="input mono" name="nodeid" id="nodeid" placeholder="02c16cca44562b590dd279c942200bdccfd4f990c3a69fad620c10ef2f8228eaff" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="host">{{ t('node_ip') }}</label>
+                  <input class="input mono" name="host" id="host" placeholder="10.147.17.32:9735" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="rune">Rune</label>
+                  <input class="input mono" name="rune" id="rune" autocomplete="off" />
+                </div>
+              </template>
+
+              <label class="check"><input type="checkbox" v-model="isNew" /> {{ t('is_new') }}</label>
+              <div class="field" v-if="!isNew">
+                <label for="pin">{{ t('pin') }}</label>
+                <input class="input mono" name="pin" id="pin" autocomplete="off" spellcheck="false" />
+                <span class="hint">{{ t('pin_hint') }}</span>
+              </div>
+
+              <div class="submit-row">
+                <button class="btn btn-cta" type="submit">{{ isNew ? t('submit_new') : t('submit_edit') }}</button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="side">
+            <section class="info">
+              <h3>{{ t('how_title') }}</h3>
+              <ol>
+                <li>{{ t('how_1') }}</li>
+                <li>{{ t('how_2') }}</li>
+                <li>{{ t('how_3') }}</li>
+              </ol>
+            </section>
+            <section class="info zap" v-if="zaps">
+              <h3>⚡ {{ t('zap_title') }}</h3>
+              <p v-html="t('zap_1')"></p>
+              <p>{{ t('zap_2') }}</p>
+            </section>
+            <section class="info safe">
+              <h3>{{ t('safe_title') }}</h3>
+              <p>{{ t('safe_1') }}</p>
+              <p v-html="t('safe_2')"></p>
+            </section>
+            <section class="info">
+              <h3>{{ t('los_title') }}</h3>
+              <p>{{ t('los_1') }}</p>
+            </section>
+          </aside>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <div class="container footer-row">
+          <span>{{ t('footer') }}</span>
+          <div class="footer-links">
+            <a href="https://br-ln.com/">br-ln.com</a>
+            <a href="https://br-ln.com/ferramentas/">{{ t('nav_tools') }}</a>
+            <a href="https://blog.br-ln.com/">Blog</a>
+            <a href="https://github.com/andrerfneves/lightning-address#readme" target="_blank" rel="noopener">Lightning Address</a>
+            <a href="https://github.com/jvxis/satdress" target="_blank" rel="noopener">{{ t('source') }}</a>
           </div>
-          <div v-if="kind == 'lnd'">
-            <div class="field">
-              <label for="host">
-                LND REST Host (Protocol + IP/Domain + Port)
-              </label>
-              <input
-                class="input full-width"
-                name="host"
-                id="host"
-                placeholder="https://mylndonionztxrvxtzrs.onion:8080"
-              />
-            </div>
-            <div class="field">
-              <label for="macaroon"> Invoice Macaroon (base64 encoded) </label>
-              <input
-                class="input full-width"
-                name="key"
-                id="macaroon"
-                placeholder="V2UgYWxsIGxvdmUgQGZpYXRqYWYhCg=="
-              />
-            </div>
-          </div>
-          <div v-if="kind == 'sparko' || kind == 'lnbits'">
-            <div class="field">
-              <label for="host"> Host (Protocol + IP or Domain + Port) </label>
-              <input
-                class="input full-width"
-                name="host"
-                id="host"
-                placeholder="http://10.147.17.32:9737"
-              />
-            </div>
-            <div class="field">
-              <label for="key"> Key </label>
-              <input class="input full-width" name="key" id="key" />
-            </div>
-          </div>
-          <div v-if="kind == 'eclair'">
-            <div class="field">
-              <label for="host"> Host (Protocol + IP or Domain + Port) </label>
-              <input
-                class="input full-width"
-                name="host"
-                id="host"
-                placeholder="http://myeclair.com"
-              />
-            </div>
-            <div>
-              <p>
-                Don't input your Eclair password here nor expose your Eclair
-                node carelessly. Follow
-                <a
-                  href="https://gist.github.com/fiatjaf/8e74740d30763713154de15562e08789#file-exposing-eclair-md"
-                  >these instructions</a
-                >
-                instead (or do something better).
-              </p>
-            </div>
-          </div>
-          <div v-if="kind == 'lnpay'">
-            <div class="field">
-              <label for="pak"> Public Access Key (pak) </label>
-              <input class="input full-width" name="pak" id="pak" />
-            </div>
-            <div class="field">
-              <label for="waki"> Wallet Invoice Key (waki) </label>
-              <input class="input full-width" name="waki" id="waki" />
-            </div>
-          </div>
-          <div class="field">
-            <label style="float: right">
-              This is a new Lightning Address
-              <input type="checkbox" v-model="isNew" />
-            </label>
-          </div>
-          <div v-if="kind == 'commando'">
-            <div class="field">
-              <label for="nodeid">Node ID (pubkey)</label>
-              <input
-                class="input full-width"
-                name="nodeid"
-                id="nodeid"
-                placeholder="02c16cca44562b590dd279c942200bdccfd4f990c3a69fad620c10ef2f8228eaff"
-              />
-            </div>
-            <div class="field">
-              <label for="host">Node IP + Port</label>
-              <input
-                class="input full-width"
-                name="host"
-                id="host"
-                placeholder="10.147.17.32:9735"
-              />
-            </div>
-            <div class="field">
-              <label for="rune">Rune</label>
-              <input class="input full-width" name="rune" id="rune" />
-            </div>
-          </div>
-          <br />
-          <div class="field" v-if="!isNew">
-            <label for="pin"> Secret PIN </label>
-            <input class="input full-width" name="pin" id="pin" />
-          </div>
-          <button class="submit">Submit</button>
-        </form>
-      </div>
-      <div class="resources">
-        <a
-          class="resource-button"
-          href="https://github.com/andrerfneves/lightning-address#readme"
-          target="_blank"
-        >
-          Lightning Address Documentation
-        </a>
-        <a
-          class="resource-button"
-          target="_blank"
-          href="https://github.com/fiatjaf/satdress"
-        >
-          Host this server on your domain!
-        </a>
-      </div>
-    </main>
+        </div>
+      </footer>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.2/vue.global.prod.min.js"></script>
     <script>
       const initial = {} // REPLACED WITH SERVER DATA //
 
+      const TEXT = {
+        pt: {
+          nav_tools: 'Ferramentas', nav_club: 'BR⚡LN Club',
+          eyebrow: 'Ferramenta grátis · BR⚡LN',
+          title: 'Lightning address <em>para o seu node</em>',
+          lede: 'Um endereço voce@pay.br-ln.com que recebe direto no seu node Lightning. É só ligar o seu node uma vez: quem paga digita o endereço, e a fatura nasce no seu node.',
+          badge_free: 'Grátis e sem cadastro', badge_custody: 'Sem custódia', badge_tor: 'Funciona por Tor', badge_zaps: 'Zaps do Nostr',
+          form_new: 'Criar a minha Lightning address', form_edit: 'Mudar a minha Lightning address',
+          name: 'Nome do endereço', name_ph: 'seunome',
+          kind: 'Tipo do seu node', kind_pick: 'Escolha um',
+          no_zaps_kind: 'Zaps do Nostr funcionam com LND e LNbits. Com este tipo, o endereço recebe pagamentos normais.',
+          lnd_host: 'Endereço REST do LND', lnd_host_hint: 'Protocolo, host e porta. Endereço .onion funciona: a conexão vai pelo Tor.',
+          lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Só a de fatura (invoice). Nunca a admin.',
+          host: 'Host (protocolo, IP ou domínio e porta)', key: 'Chave', lnbits_key: 'Chave de fatura (Invoice/read key)',
+          eclair_warn: 'Não coloque aqui a senha do Eclair nem exponha o seu node sem cuidado. Siga <a href="https://gist.github.com/fiatjaf/8e74740d30763713154de15562e08789#file-exposing-eclair-md" target="_blank" rel="noopener">estas instruções</a>.',
+          nodeid: 'Node ID (pubkey)', node_ip: 'IP e porta do node',
+          is_new: 'É um endereço novo', pin: 'PIN secreto', pin_hint: 'O PIN que apareceu quando você criou o endereço.',
+          submit_new: 'Criar endereço', submit_edit: 'Salvar mudanças',
+          how_title: 'Como funciona',
+          how_1: 'Escolha o nome e informe como falar com o seu node: o endereço REST do LND e a invoice macaroon, ou a chave de fatura do LNbits.',
+          how_2: 'Criamos uma fatura de teste no seu node para conferir a conexão e mostramos o seu PIN secreto: guarde-o, é com ele que você muda o endereço depois.',
+          how_3: 'Pronto: cada pagamento para voce@pay.br-ln.com vira uma fatura no seu node, na hora.',
+          zap_title: 'Zaps do Nostr',
+          zap_1: 'Coloque o seu endereço no perfil Nostr (campo <code>lud16</code>, "Lightning address" no Damus, Primal ou Amethyst) e receba zaps nas suas notas.',
+          zap_2: 'O servidor confere quando a fatura é paga e publica o recibo do zap nos relays de quem zapeou. Funciona com LND e LNbits.',
+          safe_title: 'Seus sats, seu node',
+          safe_1: 'Os pagamentos vão direto para o seu node: o BR⚡LN não guarda dinheiro nenhum e não toca nos seus sats.',
+          safe_2: 'A <code>invoice macaroon</code> só cria e consulta faturas: ela não consegue gastar nada. Nunca use a admin.',
+          los_title: 'Usa o LightningOS?',
+          los_1: 'Gere a invoice macaroon em Operações Lightning → Macaroon customizado, com o preset Permissões de invoice. O endereço REST costuma ser o .onion do seu node na porta 8080.',
+          footer: 'Lightning address grátis do BR⚡LN Club.', source: 'Código aberto'
+        },
+        en: {
+          nav_tools: 'Tools', nav_club: 'BR⚡LN Club',
+          eyebrow: 'Free tool · BR⚡LN',
+          title: 'A Lightning address <em>for your own node</em>',
+          lede: 'A you@pay.br-ln.com address that receives straight into your Lightning node. Connect your node once: payers type the address and the invoice is created on your node.',
+          badge_free: 'Free, no sign-up', badge_custody: 'Non-custodial', badge_tor: 'Works over Tor', badge_zaps: 'Nostr zaps',
+          form_new: 'Create my Lightning address', form_edit: 'Change my Lightning address',
+          name: 'Address name', name_ph: 'yourname',
+          kind: 'Your node type', kind_pick: 'Pick one',
+          no_zaps_kind: 'Nostr zaps work with LND and LNbits. With this type the address receives regular payments.',
+          lnd_host: 'LND REST address', lnd_host_hint: 'Protocol, host and port. An .onion address works: the connection goes over Tor.',
+          lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Only the invoice one. Never the admin.',
+          host: 'Host (protocol, IP or domain and port)', key: 'Key', lnbits_key: 'Invoice/read key',
+          eclair_warn: 'Do not put your Eclair password here nor expose your node carelessly. Follow <a href="https://gist.github.com/fiatjaf/8e74740d30763713154de15562e08789#file-exposing-eclair-md" target="_blank" rel="noopener">these instructions</a>.',
+          nodeid: 'Node ID (pubkey)', node_ip: 'Node IP and port',
+          is_new: 'This is a new address', pin: 'Secret PIN', pin_hint: 'The PIN shown when you created the address.',
+          submit_new: 'Create address', submit_edit: 'Save changes',
+          how_title: 'How it works',
+          how_1: 'Pick the name and tell us how to reach your node: the LND REST address and invoice macaroon, or the LNbits invoice key.',
+          how_2: 'We create a test invoice on your node to check the connection and show your secret PIN: keep it, you need it to change the address later.',
+          how_3: 'Done: every payment to you@pay.br-ln.com becomes an invoice on your node, right away.',
+          zap_title: 'Nostr zaps',
+          zap_1: 'Put your address in your Nostr profile (<code>lud16</code>, "Lightning address" in Damus, Primal or Amethyst) and get zaps on your notes.',
+          zap_2: 'The server checks when the invoice is paid and publishes the zap receipt to the zapper\'s relays. Works with LND and LNbits.',
+          safe_title: 'Your sats, your node',
+          safe_1: 'Payments go straight to your node: BR⚡LN holds no money and never touches your sats.',
+          safe_2: 'The <code>invoice macaroon</code> only creates and reads invoices: it cannot spend anything. Never use the admin one.',
+          los_title: 'Running LightningOS?',
+          los_1: 'Create the invoice macaroon under Lightning Ops → Custom macaroon, with the Invoice permissions preset. The REST address is usually your node\'s .onion on port 8080.',
+          footer: 'Free Lightning address from BR⚡LN Club.', source: 'Open source'
+        }
+      }
+
       const Main = {
         data() {
-          return {
-            kind: 'lnd',
-            isNew: true,
-            ...initial
+          let lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'pt'
+          return { kind: '', isNew: true, lang, zaps: false, domains: [], ...initial }
+        },
+        methods: {
+          t(key) { return (TEXT[this.lang] || TEXT.pt)[key] || TEXT.pt[key] || key },
+          toggleLang() {
+            this.lang = this.lang === 'en' ? 'pt' : 'en'
+            const url = new URL(location.href)
+            if (this.lang === 'en') url.searchParams.set('lang', 'en'); else url.searchParams.delete('lang')
+            history.replaceState(null, '', url)
+            document.documentElement.lang = this.lang === 'en' ? 'en' : 'pt-BR'
           }
         },
-
-        mounted() {
-          this.kind = ''
-        }
+        mounted() { document.documentElement.lang = this.lang === 'en' ? 'en' : 'pt-BR' }
       }
 
       Vue.createApp(Main).mount('#main')
