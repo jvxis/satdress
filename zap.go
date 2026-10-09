@@ -53,6 +53,7 @@ var (
 	zapCheckPaid = checkPaid
 	zapPublish   = publishEvent
 	zapSleep     = time.Sleep
+	zapCounted   = recordUse
 )
 
 func setupZaps() {
@@ -330,6 +331,7 @@ func watchZap(params *Params, zapReq *NostrEvent, rawZapReq, bolt11 string) bool
 				ok++
 			}
 			log.Info().Str("name", params.Name).Int("relays", ok).Msg("zap: recibo publicado")
+			zapCounted(params.Name, params.Domain, "zap")
 			return
 		}
 		log.Debug().Str("name", params.Name).Msg("zap: fatura não paga no prazo")

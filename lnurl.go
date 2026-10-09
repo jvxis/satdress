@@ -120,6 +120,7 @@ func handleLNURL(w http.ResponseWriter, r *http.Request) {
 			SuccessAction: lnurl.Action("Payment received!", ""),
 		})
 
+		recordUse(params.Name, params.Domain, "invoice")
 		if zapReq != nil {
 			watchZap(params, zapReq, rawZap, bolt11)
 		}

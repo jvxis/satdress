@@ -187,9 +187,11 @@ func TestWatchPublishesOnlyAfterPayment(t *testing.T) {
 		published <- relay
 		return nil
 	}
+	counted := make(chan string, 1)
+	zapCounted = func(name, _, what string) { counted <- name + ":" + what }
 	defer func() {
 		nostrKey, nostrPubkey = nil, ""
-		zapSleep, zapCheckPaid, zapPublish = time.Sleep, checkPaid, publishEvent
+		zapSleep, zapCheckPaid, zapPublish, zapCounted = time.Sleep, checkPaid, publishEvent, recordUse
 	}()
 	raw, req := zapRequest(t, key(7), validTags(xOnly(key(9))))
 	if !watchZap(&Params{Kind: "lnd", Name: "ana"}, req, raw, specInvoice) {
@@ -198,6 +200,9 @@ func TestWatchPublishesOnlyAfterPayment(t *testing.T) {
 	got := []string{<-published, <-published}
 	if strings.Join(got, " ") != "wss://relay.example wss://nos.example" || calls != 3 {
 		t.Fatalf("publicado em %v depois de %d consultas", got, calls)
+	}
+	if c := <-counted; c != "ana:zap" {
+		t.Fatalf("contagem %s", c)
 	}
 }
 
@@ -209,7 +214,7 @@ func TestLNURLAnnouncesZapsOnlyWhenPossible(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
+	defer func() { db.Close(); db = nil }()
 	s.Domain, s.Secret = "pay.example", "x"
 	for name, kind := range map[string]string{"ana": "lnd", "bia": "sparko"} {
 		data, _ := json.Marshal(Params{Kind: kind, Host: "https://node.example"})

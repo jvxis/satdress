@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cockroachdb/pebble"
 )
@@ -28,6 +29,11 @@ type Params struct {
 	Pin         string `json:"pin"`
 	MinSendable string `json:"minSendable"`
 	MaxSendable string `json:"maxSendable"`
+
+	// Quando o endereço foi criado e alterado pela última vez (unix). Cadastros anteriores a
+	// 09/10/2026 não têm.
+	CreatedAt int64 `json:"createdAt,omitempty"`
+	UpdatedAt int64 `json:"updatedAt,omitempty"`
 }
 
 func SaveName(
@@ -43,8 +49,10 @@ func SaveName(
 
 	pin = ComputePIN(name, domain)
 
-	if _, closer, err := db.Get(key); err == nil {
-		defer closer.Close()
+	var previous Params
+	if val, closer, err := db.Get(key); err == nil {
+		json.Unmarshal(val, &previous)
+		closer.Close()
 		if pin != providedPin {
 			return "", "", errors.New("name already exists! must provide pin")
 		}
@@ -61,7 +69,12 @@ func SaveName(
 		return "", "", fmt.Errorf("couldn't make an invoice with the given data: %w", err)
 	}
 
-	// save it
+	// save it, keeping when the address was first created
+	params.CreatedAt = previous.CreatedAt
+	if previous.Kind == "" {
+		params.CreatedAt = time.Now().Unix() // novo; um antigo sem data continua sem data
+	}
+	params.UpdatedAt = time.Now().Unix()
 	data, _ := json.Marshal(params)
 	if err := db.Set(key, data, pebble.Sync); err != nil {
 		return "", "", err

@@ -36,6 +36,9 @@ type Settings struct {
 	// o recibo além dos relays que o pedido de zap indicar.
 	NostrPrivateKey string `envconfig:"NOSTR_PRIVATE_KEY"`
 	ZapRelays       string `envconfig:"ZAP_RELAYS"`
+
+	// Token da lista de endereços para o console do admin do Services (GET /admin/addresses).
+	AdminToken string `envconfig:"ADMIN_TOKEN"`
 }
 
 var (
@@ -93,6 +96,7 @@ func main() {
 	)
 
 	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(static)))
+	router.Path("/admin/addresses").Methods("GET").HandlerFunc(handleAdminAddresses)
 
 	router.Path("/grab").HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
