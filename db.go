@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -63,6 +64,11 @@ func SaveName(
 
 	params.Name = name
 	params.Domain = domain
+
+	// only a public host or a .onion: the test invoice must not reach the server's own network
+	if err := checkPublicHost(params, net.DefaultResolver.LookupIPAddr); err != nil {
+		return "", "", err
+	}
 
 	// check if the given data works
 	if inv, err = makeInvoice(params, 1000, &pin, ""); err != nil {
