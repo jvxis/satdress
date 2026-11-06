@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 	"time"
 
@@ -82,6 +83,12 @@ func makeInvoice(
 		// make the lnurlpay description_hash
 		mip.Description = makeMetadata(params)
 		mip.UseDescriptionHash = true
+	}
+
+	// o host é conferido de novo a cada fatura: o nome pode passar a apontar para a rede interna
+	// depois do cadastro, e os endereços anteriores a 23/10/2026 nunca foram conferidos
+	if err = checkPublicHost(params, net.DefaultResolver.LookupIPAddr); err != nil {
+		return "", err
 	}
 
 	// actually generate the invoice

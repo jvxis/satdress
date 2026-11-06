@@ -39,6 +39,9 @@ type Settings struct {
 
 	// Token da lista de endereços para o console do admin do Services (GET /admin/addresses).
 	AdminToken string `envconfig:"ADMIN_TOKEN"`
+
+	// Nomes de membros que ninguém mais pode cadastrar (um por linha); ver reserved.go.
+	ReservedNamesFile string `envconfig:"RESERVED_NAMES_FILE"`
 }
 
 var (
@@ -64,7 +67,7 @@ func main() {
 	}
 
 	// increase default makeinvoice client timeout because people are using tor
-	makeinvoice.Client = &http.Client{Timeout: 25 * time.Second}
+	makeinvoice.Client = &http.Client{Timeout: 25 * time.Second, CheckRedirect: sameHostRedirect}
 
 	s.Domain = strings.ToLower(s.Domain)
 

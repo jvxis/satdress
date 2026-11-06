@@ -58,6 +58,11 @@ func SaveName(
 			return "", "", errors.New("name already exists! must provide pin")
 		}
 	}
+	if previous.Kind == "" {
+		if err := checkNewName(name); err != nil {
+			return "", "", err
+		}
+	}
 	if err != nil {
 		return "", "", errors.New("that name does not exist")
 	}
@@ -67,6 +72,9 @@ func SaveName(
 
 	// only a public host or a .onion: the test invoice must not reach the server's own network
 	if err := checkPublicHost(params, net.DefaultResolver.LookupIPAddr); err != nil {
+		return "", "", err
+	}
+	if err := checkDemoHost(params); err != nil {
 		return "", "", err
 	}
 

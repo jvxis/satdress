@@ -184,7 +184,7 @@ func httpFor(host string) *http.Client {
 			transport.Proxy = http.ProxyURL(u)
 		}
 	}
-	return &http.Client{Timeout: 30 * time.Second, Transport: transport}
+	return &http.Client{Timeout: 30 * time.Second, Transport: transport, CheckRedirect: sameHostRedirect}
 }
 
 // checkPaid consulta o node do dono: (pago, preimage em hex, quando).
