@@ -107,8 +107,9 @@ func handleLNURL(w http.ResponseWriter, r *http.Request) {
 
 		bolt11, err := makeInvoice(params, msat, nil, rawZap)
 		if err != nil {
-			json.NewEncoder(w).Encode(
-				lnurl.ErrorResponse("failed to create invoice: " + err.Error()))
+			log.Debug().Err(err).Str("name", username).Msg("invoice for payer failed")
+			json.NewEncoder(w).Encode(lnurl.ErrorResponse(
+				"Não foi possível gerar a fatura agora. / Could not create the invoice right now."))
 			return
 		}
 

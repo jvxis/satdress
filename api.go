@@ -28,7 +28,7 @@ func ClaimAddress(w http.ResponseWriter, r *http.Request) {
 	params := parseParams(r)
 	pin, inv, err := SaveName(params.Name, params.Domain, params, params.Pin)
 	if err != nil {
-		sendError(w, 400, "could not register name: %s", err.Error())
+		sendError(w, 400, "could not register name: %s", publicError(err).Error())
 		return
 	}
 
@@ -79,7 +79,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, _, err := SaveName(name, domain, params, params.Pin); err != nil {
-		sendError(w, 500, err.Error())
+		sendError(w, 500, publicError(err).Error())
 		return
 	}
 

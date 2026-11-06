@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -57,5 +60,21 @@ func TestSameHostRedirect(t *testing.T) {
 	}
 	if sameHostRedirect(other, []*http.Request{first}) == nil {
 		t.Error("redirecionamento para outro host deveria ser recusado")
+	}
+}
+
+func TestPublicErrorHidesTheReason(t *testing.T) {
+	backend := fmt.Errorf("couldn't make an invoice with the given data: %w",
+		errors.New(`call to lnbits failed (404): {"detail":"segredo interno"}`))
+	for _, err := range []error{backend, errDemoHost, errHostNotPublic, errors.New("node host redirected to another host")} {
+		if publicError(err) != errPublicInvoice {
+			t.Errorf("%v deveria virar a mensagem genérica", err)
+		}
+	}
+	if publicError(errReservedName) != errNameUnavailable || strings.Contains(errNameUnavailable.Error(), "reserv") {
+		t.Error("nome reservado deveria sair só como indisponível")
+	}
+	if publicError(errBadName) != errBadName {
+		t.Error("o formato do nome continua explicado")
 	}
 }

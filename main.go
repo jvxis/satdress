@@ -131,7 +131,7 @@ func main() {
 			}, r.FormValue("pin"))
 			if err != nil {
 				w.WriteHeader(500)
-				fmt.Fprint(w, err.Error())
+				fmt.Fprint(w, publicError(err).Error())
 				return
 			}
 

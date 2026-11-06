@@ -14,16 +14,13 @@ import (
 // clube nem um membro, e o demo do LNbits não serve de carteira. Endereços que já existem seguem
 // funcionando e o dono continua podendo atualizá-los com o PIN.
 
-var errReservedName = errors.New(
-	"Esse nome é reservado ao clube BR⚡LN. Se ele é seu, fale com o suporte do clube. / " +
-		"This name is reserved for the BR⚡LN club. If it is yours, ask the club's support.")
+var errReservedName = errors.New("reserved name") // ao visitante sai errNameUnavailable
 
 var errBadName = errors.New(
 	"Use de 1 a 64 letras minúsculas, números, ponto, hífen ou sublinhado. / " +
 		"Use 1 to 64 lowercase letters, digits, dot, hyphen or underscore.")
 
-var errDemoHost = errors.New(
-	"Carteiras de demonstração do LNbits não podem receber aqui. / LNbits demo wallets are not accepted.")
+var errDemoHost = errors.New("LNbits demo host")
 
 var validName = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,63}$`)
 
@@ -105,4 +102,27 @@ func sameHostRedirect(req *http.Request, via []*http.Request) error {
 		return errors.New("node host redirected to another host")
 	}
 	return nil
+}
+
+// Erro que volta ao visitante: sem o motivo das travas nem o texto do servidor do node (06/11/2026). O robô
+// usava o erro para saber o que existe atrás do host e qual regra o barrou; o detalhe fica só no log.
+var errPublicInvoice = errors.New(
+	"Não foi possível gerar uma fatura de teste com esses dados. Confira o tipo, o endereço e a chave do seu node. / " +
+		"Could not create a test invoice with this data. Check your node's kind, address and key.")
+
+var errNameUnavailable = errors.New("Esse nome não está disponível. / This name is not available.")
+
+func publicError(err error) error {
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, errBadName):
+		return errBadName // formato do nome: ajuda a pessoa e não conta nada
+	case errors.Is(err, errReservedName):
+		return errNameUnavailable
+	case strings.HasPrefix(err.Error(), "name already exists"), err.Error() == "that name does not exist":
+		return err
+	}
+	log.Debug().Err(err).Msg("registration refused")
+	return errPublicInvoice
 }
