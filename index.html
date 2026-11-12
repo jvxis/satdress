@@ -72,7 +72,7 @@
                 <div class="field">
                   <label for="host">{{ t('lnd_host') }}</label>
                   <input class="input mono" name="host" id="host" placeholder="https://seunode....onion:8080" autocomplete="off" spellcheck="false" />
-                  <span class="hint">{{ t('lnd_host_hint') }} <a href="https://br-ln.com/guias/lightning-address/?utm_source=pay&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_campo#no-seu-node" target="_blank" rel="noopener">{{ t('los_guide') }}</a></span>
+                  <span class="hint">{{ t('lnd_host_hint') }} <a href="https://br-ln.com/guias/lightning-address/?utm_source=pay&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_campo#no-seu-node" target="_blank" rel="noopener">{{ t('tor_guide') }}</a></span>
                 </div>
                 <div class="field">
                   <label for="macaroon">{{ t('lnd_macaroon') }}</label>
@@ -148,20 +148,13 @@
                 <li>{{ t('how_3') }}</li>
               </ol>
             </section>
-            <section class="info zap" v-if="zaps">
-              <h3>⚡ {{ t('zap_title') }}</h3>
-              <p v-html="t('zap_1')"></p>
-              <p>{{ t('zap_2') }}</p>
-            </section>
             <section class="info safe">
-              <h3>{{ t('safe_title') }}</h3>
-              <p>{{ t('safe_1') }}</p>
-              <p v-html="t('safe_2')"></p>
-            </section>
-            <section class="info">
-              <h3>{{ t('los_title') }}</h3>
-              <p>{{ t('los_1') }}</p>
-              <p><a href="https://br-ln.com/guias/lightning-address/?utm_source=pay&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_los#no-seu-node" target="_blank" rel="noopener">{{ t('los_guide') }}</a></p>
+              <h3>{{ t('tips_title') }}</h3>
+              <ul>
+                <li v-html="t('tip_sats')"></li>
+                <li v-if="zaps" v-html="t('tip_zap')"></li>
+                <li>{{ t('tip_tor') }} <a href="https://br-ln.com/guias/lightning-address/?utm_source=pay&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_dicas#no-seu-node" target="_blank" rel="noopener">{{ t('tor_guide') }}</a></li>
+              </ul>
             </section>
           </aside>
         </div>
@@ -196,26 +189,22 @@
           name: 'Nome do endereço', name_ph: 'seunome',
           kind: 'Tipo do seu node', kind_pick: 'Escolha um',
           no_zaps_kind: 'Zaps do Nostr funcionam com LND e LNbits. Com este tipo, o endereço recebe pagamentos normais.',
-          lnd_host: 'Endereço REST do LND', lnd_host_hint: 'Protocolo, endereço e porta, sem a pubkey: https://xxxx.onion:8080. É o .onion do REST, não o que o node usa para falar com outros nodes.',
-          lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Só a de fatura (invoice). Nunca a admin.',
+          lnd_host: 'Endereço REST do LND', lnd_host_hint: 'Protocolo, endereço e porta, sem a pubkey: https://xxxx.onion:8080.',
+          lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Só a de fatura (invoice). Nunca a admin. No LightningOS: Operações Lightning → Macaroon customizado → Permissões de invoice.',
           host: 'Host (protocolo, IP ou domínio e porta)', key: 'Chave', lnbits_key: 'Chave de fatura (Invoice/read key)',
           eclair_warn: 'Não coloque aqui a senha do Eclair nem exponha o seu node sem cuidado. Siga <a href="https://gist.github.com/fiatjaf/8e74740d30763713154de15562e08789#file-exposing-eclair-md" target="_blank" rel="noopener">estas instruções</a>.',
           nodeid: 'Node ID (pubkey)', node_ip: 'IP e porta do node',
           is_new: 'É um endereço novo', pin: 'PIN secreto', pin_hint: 'O PIN que apareceu quando você criou o endereço.',
           submit_new: 'Criar endereço', submit_edit: 'Salvar mudanças',
           how_title: 'Como funciona',
-          how_1: 'Escolha o nome e informe como falar com o seu node: o endereço REST do LND e a invoice macaroon, ou a chave de fatura do LNbits.',
-          how_2: 'Criamos uma fatura de teste no seu node para conferir a conexão e mostramos o seu PIN secreto: guarde-o, é com ele que você muda o endereço depois.',
-          how_3: 'Pronto: cada pagamento para voce@pay.br-ln.com vira uma fatura no seu node, na hora.',
-          zap_title: 'Zaps do Nostr',
-          zap_1: 'Coloque o seu endereço no perfil Nostr (campo <code>lud16</code>, "Lightning address" no Damus, Primal ou Amethyst) e receba zaps nas suas notas.',
-          zap_2: 'O servidor confere quando a fatura é paga e publica o recibo do zap nos relays de quem zapeou. Funciona com LND e LNbits.',
-          safe_title: 'Seus sats, seu node',
-          safe_1: 'Os pagamentos vão direto para o seu node: o BR⚡LN não guarda dinheiro nenhum e não toca nos seus sats.',
-          safe_2: 'A <code>invoice macaroon</code> só cria e consulta faturas: ela não consegue gastar nada. Nunca use a admin.',
-          los_title: 'Usa o LightningOS?',
-          los_1: 'Gere a invoice macaroon em Operações Lightning → Macaroon customizado, com o preset Permissões de invoice. O endereço REST é um .onion próprio da porta 8080, que você cria uma vez no Tor do node: ele não é o .onion que o node usa para falar com outros nodes.',
-          los_guide: 'Passo a passo para criar o endereço do REST',
+          how_1: 'Escolha o nome e diga como chegar ao seu node: o REST do LND com a invoice macaroon, ou a chave de fatura do LNbits.',
+          how_2: 'Criamos uma fatura de teste e mostramos o seu PIN: guarde, é com ele que você muda o endereço depois.',
+          how_3: 'Cada pagamento para voce@pay.br-ln.com vira uma fatura no seu node, na hora.',
+          tips_title: 'Bom saber',
+          tip_sats: 'Os sats vão direto para o seu node: o BR⚡LN não guarda dinheiro. A <code>invoice macaroon</code> só cria faturas e não gasta nada.',
+          tip_zap: 'Zaps do Nostr: ponha o endereço no campo <code>lud16</code> do seu perfil. Funciona com LND e LNbits.',
+          tip_tor: 'Node só pelo Tor? O REST precisa de um .onion próprio, diferente do que o node usa com outros nodes.',
+          tor_guide: 'Como criar',
           footer: 'Lightning address grátis do BR⚡LN Club.', source: 'Código aberto'
         },
         en: {
@@ -228,26 +217,22 @@
           name: 'Address name', name_ph: 'yourname',
           kind: 'Your node type', kind_pick: 'Pick one',
           no_zaps_kind: 'Nostr zaps work with LND and LNbits. With this type the address receives regular payments.',
-          lnd_host: 'LND REST address', lnd_host_hint: 'Protocol, address and port, without the pubkey: https://xxxx.onion:8080. It is the REST .onion, not the one the node uses to talk to other nodes.',
-          lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Only the invoice one. Never the admin.',
+          lnd_host: 'LND REST address', lnd_host_hint: 'Protocol, address and port, without the pubkey: https://xxxx.onion:8080.',
+          lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Only the invoice one. Never the admin. On LightningOS: Lightning Ops → Custom macaroon → Invoice permissions.',
           host: 'Host (protocol, IP or domain and port)', key: 'Key', lnbits_key: 'Invoice/read key',
           eclair_warn: 'Do not put your Eclair password here nor expose your node carelessly. Follow <a href="https://gist.github.com/fiatjaf/8e74740d30763713154de15562e08789#file-exposing-eclair-md" target="_blank" rel="noopener">these instructions</a>.',
           nodeid: 'Node ID (pubkey)', node_ip: 'Node IP and port',
           is_new: 'This is a new address', pin: 'Secret PIN', pin_hint: 'The PIN shown when you created the address.',
           submit_new: 'Create address', submit_edit: 'Save changes',
           how_title: 'How it works',
-          how_1: 'Pick the name and tell us how to reach your node: the LND REST address and invoice macaroon, or the LNbits invoice key.',
-          how_2: 'We create a test invoice on your node to check the connection and show your secret PIN: keep it, you need it to change the address later.',
-          how_3: 'Done: every payment to you@pay.br-ln.com becomes an invoice on your node, right away.',
-          zap_title: 'Nostr zaps',
-          zap_1: 'Put your address in your Nostr profile (<code>lud16</code>, "Lightning address" in Damus, Primal or Amethyst) and get zaps on your notes.',
-          zap_2: 'The server checks when the invoice is paid and publishes the zap receipt to the zapper\'s relays. Works with LND and LNbits.',
-          safe_title: 'Your sats, your node',
-          safe_1: 'Payments go straight to your node: BR⚡LN holds no money and never touches your sats.',
-          safe_2: 'The <code>invoice macaroon</code> only creates and reads invoices: it cannot spend anything. Never use the admin one.',
-          los_title: 'Running LightningOS?',
-          los_1: 'Create the invoice macaroon under Lightning Ops → Custom macaroon, with the Invoice permissions preset. The REST address is a separate .onion for port 8080 that you create once in the Tor of your node: it is not the .onion the node uses to talk to other nodes.',
-          los_guide: 'Step by step to create the REST address (in Portuguese)',
+          how_1: 'Pick the name and tell us how to reach your node: LND REST with the invoice macaroon, or the LNbits invoice key.',
+          how_2: 'We create a test invoice and show your PIN: keep it, it lets you change the address later.',
+          how_3: 'Every payment to you@pay.br-ln.com becomes an invoice on your node, right away.',
+          tips_title: 'Good to know',
+          tip_sats: 'Sats go straight to your node: BR⚡LN holds no money. The <code>invoice macaroon</code> only creates invoices and cannot spend.',
+          tip_zap: 'Nostr zaps: put the address in the <code>lud16</code> field of your profile. Works with LND and LNbits.',
+          tip_tor: 'Tor-only node? The REST needs its own .onion, separate from the one the node uses with other nodes.',
+          tor_guide: 'How to create it (in Portuguese)',
           footer: 'Free Lightning address from BR⚡LN Club.', source: 'Open source'
         }
       }
