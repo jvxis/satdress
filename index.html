@@ -72,7 +72,7 @@
                 <div class="field">
                   <label for="host">{{ t('lnd_host') }}</label>
                   <input class="input mono" name="host" id="host" placeholder="https://seunode....onion:8080" autocomplete="off" spellcheck="false" />
-                  <span class="hint">{{ t('lnd_host_hint') }}</span>
+                  <span class="hint">{{ t('lnd_host_hint') }} <a href="https://br-ln.com/guias/lightning-address/?utm_source=pay&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_campo#no-seu-node" target="_blank" rel="noopener">{{ t('los_guide') }}</a></span>
                 </div>
                 <div class="field">
                   <label for="macaroon">{{ t('lnd_macaroon') }}</label>
@@ -161,6 +161,7 @@
             <section class="info">
               <h3>{{ t('los_title') }}</h3>
               <p>{{ t('los_1') }}</p>
+              <p><a href="https://br-ln.com/guias/lightning-address/?utm_source=pay&utm_medium=internal&utm_campaign=lnaddress&utm_content=pay_los#no-seu-node" target="_blank" rel="noopener">{{ t('los_guide') }}</a></p>
             </section>
           </aside>
         </div>
@@ -195,7 +196,7 @@
           name: 'Nome do endereço', name_ph: 'seunome',
           kind: 'Tipo do seu node', kind_pick: 'Escolha um',
           no_zaps_kind: 'Zaps do Nostr funcionam com LND e LNbits. Com este tipo, o endereço recebe pagamentos normais.',
-          lnd_host: 'Endereço REST do LND', lnd_host_hint: 'Protocolo, host e porta. Endereço .onion funciona: a conexão vai pelo Tor.',
+          lnd_host: 'Endereço REST do LND', lnd_host_hint: 'Protocolo, endereço e porta, sem a pubkey: https://xxxx.onion:8080. É o .onion do REST, não o que o node usa para falar com outros nodes.',
           lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Só a de fatura (invoice). Nunca a admin.',
           host: 'Host (protocolo, IP ou domínio e porta)', key: 'Chave', lnbits_key: 'Chave de fatura (Invoice/read key)',
           eclair_warn: 'Não coloque aqui a senha do Eclair nem exponha o seu node sem cuidado. Siga <a href="https://gist.github.com/fiatjaf/8e74740d30763713154de15562e08789#file-exposing-eclair-md" target="_blank" rel="noopener">estas instruções</a>.',
@@ -213,7 +214,8 @@
           safe_1: 'Os pagamentos vão direto para o seu node: o BR⚡LN não guarda dinheiro nenhum e não toca nos seus sats.',
           safe_2: 'A <code>invoice macaroon</code> só cria e consulta faturas: ela não consegue gastar nada. Nunca use a admin.',
           los_title: 'Usa o LightningOS?',
-          los_1: 'Gere a invoice macaroon em Operações Lightning → Macaroon customizado, com o preset Permissões de invoice. O endereço REST costuma ser o .onion do seu node na porta 8080.',
+          los_1: 'Gere a invoice macaroon em Operações Lightning → Macaroon customizado, com o preset Permissões de invoice. O endereço REST é um .onion próprio da porta 8080, que você cria uma vez no Tor do node: ele não é o .onion que o node usa para falar com outros nodes.',
+          los_guide: 'Passo a passo para criar o endereço do REST',
           footer: 'Lightning address grátis do BR⚡LN Club.', source: 'Código aberto'
         },
         en: {
@@ -226,7 +228,7 @@
           name: 'Address name', name_ph: 'yourname',
           kind: 'Your node type', kind_pick: 'Pick one',
           no_zaps_kind: 'Nostr zaps work with LND and LNbits. With this type the address receives regular payments.',
-          lnd_host: 'LND REST address', lnd_host_hint: 'Protocol, host and port. An .onion address works: the connection goes over Tor.',
+          lnd_host: 'LND REST address', lnd_host_hint: 'Protocol, address and port, without the pubkey: https://xxxx.onion:8080. It is the REST .onion, not the one the node uses to talk to other nodes.',
           lnd_macaroon: 'Invoice macaroon (base64)', lnd_macaroon_hint: 'Only the invoice one. Never the admin.',
           host: 'Host (protocol, IP or domain and port)', key: 'Key', lnbits_key: 'Invoice/read key',
           eclair_warn: 'Do not put your Eclair password here nor expose your node carelessly. Follow <a href="https://gist.github.com/fiatjaf/8e74740d30763713154de15562e08789#file-exposing-eclair-md" target="_blank" rel="noopener">these instructions</a>.',
@@ -244,7 +246,8 @@
           safe_1: 'Payments go straight to your node: BR⚡LN holds no money and never touches your sats.',
           safe_2: 'The <code>invoice macaroon</code> only creates and reads invoices: it cannot spend anything. Never use the admin one.',
           los_title: 'Running LightningOS?',
-          los_1: 'Create the invoice macaroon under Lightning Ops → Custom macaroon, with the Invoice permissions preset. The REST address is usually your node\'s .onion on port 8080.',
+          los_1: 'Create the invoice macaroon under Lightning Ops → Custom macaroon, with the Invoice permissions preset. The REST address is a separate .onion for port 8080 that you create once in the node's Tor: it is not the .onion the node uses to talk to other nodes.',
+          los_guide: 'Step by step to create the REST address (in Portuguese)',
           footer: 'Free Lightning address from BR⚡LN Club.', source: 'Open source'
         }
       }
