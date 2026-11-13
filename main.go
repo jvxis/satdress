@@ -66,8 +66,10 @@ func main() {
 		log.Fatal().Err(err).Msg("couldn't process envconfig.")
 	}
 
-	// increase default makeinvoice client timeout because people are using tor
-	makeinvoice.Client = &http.Client{Timeout: 25 * time.Second, CheckRedirect: sameHostRedirect}
+	// increase default makeinvoice client timeout because people are using tor.
+	// 13/11/2026: a node behind a slow Tor circuit took 13-28 s to return an invoice. The server's
+	// WriteTimeout must stay above this, or the answer is cut before the invoice arrives.
+	makeinvoice.Client = &http.Client{Timeout: 30 * time.Second, CheckRedirect: sameHostRedirect}
 
 	s.Domain = strings.ToLower(s.Domain)
 
@@ -158,7 +160,7 @@ func main() {
 	srv := &http.Server{
 		Handler:      cors.Default().Handler(router),
 		Addr:         s.Host + ":" + s.Port,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 45 * time.Second, // above makeinvoice.Client.Timeout (30 s), below nginx's 60 s
 		ReadTimeout:  15 * time.Second,
 	}
 	log.Debug().Str("addr", srv.Addr).Msg("listening")
